@@ -1,0 +1,89 @@
+name: Deploy frontend to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Configure public build
+        shell: bash
+        env:
+          CONFIGURED_BASE_PATH: ${{ vars.VITE_BASE_PATH }}
+          CONFIGURED_API_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          if [[ -n "$CONFIGURED_BASE_PATH" ]]; then
+            base="$CONFIGURED_BASE_PATH"
+          elif [[ "${GITHUB_REPOSITORY#*/}" == "${GITHUB_REPOSITORY_OWNER}.github.io" ]]; then
+            base="/"
+          else
+            base="/${GITHUB_REPOSITORY#*/}/"
+          fi
+          echo "VITE_BASE_PATH=$base" >> "$GITHUB_ENV"
+          echo "VITE_API_BASE_URL=$CONFIGURED_API_URL" >> "$GITHUB_ENV"
+          echo "VITE_PUBLIC_DEPLOYMENT=github-pages" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit public source tree
+        run: npm run audit:public
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: GitHub Pages route and offline tests
+        run: npm run test:e2e:pages
+
+      - name: Production build
+        run: npm run build
+
+      - name: Verify deployment artifact
+        run: npm run verify:dist
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

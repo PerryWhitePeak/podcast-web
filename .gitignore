@@ -1,0 +1,10 @@
+node_modules
+dist
+.env*
+!.env.example
+!.env.pages-test
+*.log
+test-results
+playwright-report
+e2e/artifacts
+.stage6f_runtime

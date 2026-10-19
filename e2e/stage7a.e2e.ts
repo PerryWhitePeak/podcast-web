@@ -1,0 +1,31 @@
+import { expect, test } from '@playwright/test'
+
+test('真实本地 Mock SSE 逐段展示，完成后才开放引用', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop streaming flow')
+  await page.goto('/agent')
+  await page.getByLabel('输入问题').fill('财富自由是什么？')
+  await page.getByRole('button', { name: '发送' }).click()
+  await expect(page.getByText('正在查找相关访谈内容……')).toBeVisible()
+  await expect(page.getByText('可以先从访谈里与问题直接相关的观点入手。')).toBeVisible({ timeout: 120_000 })
+  await expect(page.locator('.stream-response')).toBeVisible()
+  await expect(page.locator('.stream-response .citation-card')).toHaveCount(0)
+  await expect(page.locator('.assistant-response .citations-group')).toBeVisible({ timeout: 30_000 })
+  await expect(page.getByRole('region', { name: '访谈中的相关讨论' })).toBeVisible()
+  await expect(page.locator('.citations-group')).not.toHaveAttribute('open', '')
+  await page.locator('.citations-group > summary').click()
+  await expect(page.locator('.assistant-response .citation-card').first()).toBeVisible()
+  await expect(page.locator('.assistant-response')).not.toContainText('ev_')
+})
+
+test('停止生成后撤回不完整草稿并保留手动重试入口', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop-chromium', 'desktop stop flow')
+  await page.goto('/agent')
+  await page.getByLabel('输入问题').fill('财富自由是什么？')
+  await page.getByRole('button', { name: '发送' }).click()
+  await expect(page.getByText('可以先从访谈里与问题直接相关的观点入手。')).toBeVisible({ timeout: 120_000 })
+  await page.getByRole('button', { name: '停止生成' }).click()
+  await expect(page.getByText('本次回答未完成', { exact: true })).toBeVisible()
+  await expect(page.getByText('可以先从访谈里与问题直接相关的观点入手。')).toHaveCount(0)
+  await expect(page.locator('.assistant-response .citations-group')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /手动重试/ })).toBeEnabled()
+})
