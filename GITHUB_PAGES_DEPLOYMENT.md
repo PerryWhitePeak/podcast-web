@@ -2,9 +2,15 @@
 
 ## 当前状态
 
-此目录已经可以作为独立前端仓库的根目录。当前本机没有可用 Git 仓库元数据；GitHub CLI 账户 `PerryYang10` 的本地令牌也已失效，因此尚未创建仓库、推送或上线。
+此目录是独立前端仓库 `PerryWhitePeak/podcast-web` 的根目录，仓库为公开可见，发布分支为 `main`：
 
-推荐仓库名为 `podcast-web`，发布分支为 `main`。首次公开发布前必须由项目所有者明确确认仓库名称、公开可见性，以及逐字稿和三张人物图片的公网发布授权。
+- 仓库：<https://github.com/PerryWhitePeak/podcast-web>
+- GitHub Pages：<https://perrywhitepeak.github.io/podcast-web/>
+- 部署方式：GitHub Actions
+- HTTPS：强制启用
+- 云端 API：尚未配置；Agent、登录、邀请码、额度、SSE 与音频在线功能保持安全离线状态
+
+项目所有者已于 2026-10-19 明确授权公开发布逐字稿和三张人物图片。GitHub Actions 的构建、测试与部署，以及桌面端和移动端公网验收均已通过。
 
 ## 公开仓库范围
 
@@ -17,24 +23,24 @@
 - `public/sun-yuchen.png`
 - `public/shao-ailun.png`
 
-上述内容必须完成权利确认后才能公开推送。`npm run audit:public` 会检查常见密钥、私钥、数据库、音频和私有环境文件，但不能替代版权与隐私审查。
+上述内容已经完成本次公开发布授权。后续替换或新增素材仍须单独确认权利。`npm run audit:public` 会检查常见密钥、私钥、数据库、音频和私有环境文件，但不能替代版权与隐私审查。
 
-## 首次建库（获得明确授权后）
+## 仓库维护
 
-在 `frontend` 目录中创建全新仓库可以避免把 Podcast 工程的其他文件或未知历史带入公开仓库：
+该仓库采用独立前端历史，避免把 Podcast 父工程、后端、数据或未知历史带入公开仓库。提交前执行：
 
 ```powershell
-git init -b main
-git add .
+npm run audit:public
+npm run typecheck
+npm test
+npm run test:e2e:pages
+git add --all
 git status --short
 git diff --cached --stat
 git diff --cached -- . ':!content/完整逐字稿github.md'
-git commit -m "Prepare Podcast frontend for GitHub Pages"
-gh auth login -h github.com
-gh repo create podcast-web --public --source . --remote origin --push
 ```
 
-不要在未确认公开发布前执行最后一条命令。若改用已有仓库，应先检查其完整 Git 历史是否包含秘密；仅新增 `.gitignore` 不能清除历史泄漏。
+若以后迁移或合并到其他仓库，应先检查完整 Git 历史是否包含秘密；仅新增 `.gitignore` 不能清除历史泄漏。
 
 ## Pages 与 Actions 设置
 

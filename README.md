@@ -4,6 +4,8 @@
 
 前端使用 React 19、TypeScript 7 和 Vite 8。浏览器只展示 API 返回的回答、引用和时间信息，不在前端伪造模型结果或替代服务端鉴权。
 
+公开站点：<https://perrywhitepeak.github.io/podcast-web/>。云端 API 尚未配置，因此静态页面可用，在线功能会明确显示服务未连接。
+
 ## 本地开发
 
 后端默认由 Vite 将 `/api` 代理到 `http://127.0.0.1:8000`：
